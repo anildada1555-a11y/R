@@ -1,0 +1,44 @@
+name: Build R APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle 8.10
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10'
+
+      - name: Extract R project
+        run: |
+          rm -rf r-build
+          unzip -q R.zip -d r-build
+          test -f r-build/R-final/settings.gradle.kts
+          echo "R project found successfully"
+
+      - name: Build APK
+        working-directory: r-build/R-final
+        run: |
+          gradle :app:assembleDebug --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: R-debug-APK
+          path: r-build/R-final/app/build/outputs/apk/debug/app-debug.apk
