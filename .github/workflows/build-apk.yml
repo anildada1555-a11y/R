@@ -1,4 +1,4 @@
-name: Build R2 APK
+name: Build R3 APK
 
 on:
   workflow_dispatch:
@@ -25,20 +25,20 @@ jobs:
         with:
           gradle-version: '8.10'
 
-      - name: Extract R2 project
+      - name: Extract R3 project
         run: |
           rm -rf r-build
-          unzip -q R2.zip -d r-build
+          unzip -q R3.zip -d r-build
           test -f r-build/R-final/settings.gradle.kts
-          echo "R2 project found successfully"
+          echo "R3 project found successfully"
 
-      - name: Build R2 APK
+      - name: Build R3 APK
         working-directory: r-build/R-final
         run: |
           gradle :app:assembleDebug --stacktrace
 
-      - name: Upload R2 APK
+      - name: Upload R3 APK
         uses: actions/upload-artifact@v4
         with:
-          name: R2-debug-APK
+          name: R3-debug-APK
           path: r-build/R-final/app/build/outputs/apk/debug/app-debug.apk
