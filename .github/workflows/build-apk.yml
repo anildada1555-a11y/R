@@ -32,13 +32,30 @@ jobs:
           test -f r-build/R-final/settings.gradle.kts
           echo "R3 project found successfully"
 
-      - name: Build R3 APK
-        working-directory: r-build/R-final
+      - name: Decode signing keystore
+        env:
+          R_KEYSTORE_BASE64: ${{ secrets.R_KEYSTORE_BASE64 }}
         run: |
-          gradle :app:assembleDebug --stacktrace
+          echo "$R_KEYSTORE_BASE64" | base64 --decode > r-build/R-final/r-release.jks
+          test -s r-build/R-final/r-release.jks
+
+      - name: Build R3 signed APK
+        working-directory: r-build/R-final
+        env:
+          R_KEYSTORE_PATH: ${{ github.workspace }}/r-build/R-final/r-release.jks
+          R_KEYSTORE_PASSWORD: ${{ secrets.R_KEYSTORE_PASSWORD }}
+          R_KEY_ALIAS: ${{ secrets.R_KEY_ALIAS }}
+          R_KEY_PASSWORD: ${{ secrets.R_KEYSTORE_PASSWORD }}
+        run: |
+          gradle :app:assembleRelease --stacktrace
+
+      - name: Rename APK
+        run: |
+          cp r-build/R-final/app/build/outputs/apk/release/app-release.apk \
+             r-build/R-final/app/build/outputs/apk/release/R3.apk
 
       - name: Upload R3 APK
         uses: actions/upload-artifact@v4
         with:
-          name: R3-debug-APK
-          path: r-build/R-final/app/build/outputs/apk/debug/app-debug.apk
+          name: R3-signed-APK
+          path: r-build/R-final/app/build/outputs/apk/release/R3.apk
